@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. BASE DE DATOS (MySQL)
+  # -------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: myappseb_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: myappseb_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # 33070 (evita choques y mejora seguridad)
+      - "33070:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - myappseb_network
+
+  # -------------------------------------------------------------
+  # 2. GESTOR DE BD (phpMyAdmin)
+  # -------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: myappseb_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # http://localhost:8085
+      - "8085:80"
+    depends_on:
+      - db
+    networks:
+      - myappseb_network
+
+networks:
+  myappseb_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
