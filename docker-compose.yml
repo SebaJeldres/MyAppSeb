@@ -1,6 +1,23 @@
-version: '3.8'
 
 services:
+
+  # -------------------------------------------------------------
+  # 3. BACKEND (Laravel / PHP-FPM)
+  # -------------------------------------------------------------
+  app:
+    build:
+      context: ./MyAppSeb_Backend
+      dockerfile: Dockerfile
+    container_name: myappseb_app
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./MyAppSeb_Backend:/var/www
+    depends_on:
+      - db
+    networks:
+      - myappseb_network
+      
   # -------------------------------------------------------------
   # 1. BASE DE DATOS (MySQL)
   # -------------------------------------------------------------
