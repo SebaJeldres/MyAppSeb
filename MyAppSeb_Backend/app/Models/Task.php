@@ -6,5 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-    protected $fillable = ['name', 'status'];
+    protected $fillable = [
+        'name',
+        'status',
+    ];
+
+
+    protected $casts = [
+        
+        'status' => 'boolean',
+    ];
 }

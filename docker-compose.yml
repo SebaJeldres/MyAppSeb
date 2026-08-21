@@ -36,6 +36,24 @@ services:
     networks:
       - myappseb_network
 
+  #-------------------------------------------------------------
+  # Nginx
+  #-------------------------------------------------------------
+
+  web:
+    image: nginx:alpine
+    container_name: myappseb_nginx
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - ./MyAppSeb_Backend:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - myappseb_network
+
   # -------------------------------------------------------------
   # 2. GESTOR DE BD (phpMyAdmin)
   # -------------------------------------------------------------
