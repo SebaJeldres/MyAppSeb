@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
-use illuminate\Support\Facades\Validator;
-use throwable;
+use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class TaskController extends Controller
 {
