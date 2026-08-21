@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use illuminate\Support\Facades\Validator;
 use throwable;
 
 class TaskController extends Controller
@@ -38,7 +39,41 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:100',
+                'status' => 'sometimes|boolean',
+            ]);
+
+            if ($validator->fails()) {
+
+                return response()->json([
+                    'message' => 'Datos invalidos',
+                    'errors' => $validator->errors(),
+                    'status' => 422,
+                ], 422);
+            }
+
+            $task = Task::create([
+                'name' => $request->name,
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'message' => 'Tarea creada con exito',
+                'task' => $task,
+                'status' => 201
+            ], 201);
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al crear la tarea',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+
+        }
     }
 
     /**
