@@ -79,24 +79,115 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Task $task)
+    public function show($id)
     {
-        //
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return response()->json([
+                    'message' => 'Tarea no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Tarea extraida con exito',
+                'task' => $task,
+                'status' => 200
+            ], 200);
+        
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al traer la tarea',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|boolean',
+            ]);
+
+            if ($validator->fails()) {
+
+                return response()->json([
+                    'message' => 'Datos invalidos',
+                    'errors' => $validator->errors(),
+                    'status' => 422,
+                ], 422);
+            }
+
+            $task = Task::find($id);
+
+            if (!$task) {
+                return response()->json([
+                    'message' => 'Tarea no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            $task->update([
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'message' => 'Estado actualizada con exito',
+                'task' => $task,
+                'status' => 200
+            ], 200);
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al actualizar el estado',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy($id)
     {
-        //
+        try {
+
+            $task = Task::find($id);
+
+            if (!$task) {
+                return response()->json([
+                    'message' => 'Tarea no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            $task->delete();
+
+            return response()->json([
+                'message' => 'Tarea eliminada con exito',
+                'status' => 200
+            ], 200);
+
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al eliminar la tarea',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 }
