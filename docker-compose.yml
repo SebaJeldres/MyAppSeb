@@ -2,7 +2,7 @@
 services:
 
   # -------------------------------------------------------------
-  # 3. BACKEND (Laravel / PHP-FPM)
+  # 1. BACKEND (Laravel / PHP-FPM)
   # -------------------------------------------------------------
   app:
     build:
@@ -17,9 +17,28 @@ services:
       - db
     networks:
       - myappseb_network
+
+
+  #---------------------------------------------------------------
+  # 2. FRONTEND (React / Vite)
+  #---------------------------------------------------------------
+
+  frontend:
+    build:
+      context: ./MyAppSeb_Frontend
+      dockerfile: Dockerfile
+    container_name: myappseb_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./MyAppSeb_Frontend:/app
+      - /app/node_modules
+    networks:
+      - myappseb_network
       
   # -------------------------------------------------------------
-  # 1. BASE DE DATOS (MySQL)
+  # 3. BASE DE DATOS (MySQL)
   # -------------------------------------------------------------
   db:
     image: mysql:8.0
@@ -33,6 +52,25 @@ services:
       - "33070:3306"
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - myappseb_network
+
+
+   # -------------------------------------------------------------
+  # 4. GESTOR DE BD (phpMyAdmin)
+  # -------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: myappseb_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # http://localhost:8085
+      - "8085:80"
+    depends_on:
+      - db
     networks:
       - myappseb_network
 
@@ -51,24 +89,6 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
-    networks:
-      - myappseb_network
-
-  # -------------------------------------------------------------
-  # 2. GESTOR DE BD (phpMyAdmin)
-  # -------------------------------------------------------------
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: myappseb_phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      # http://localhost:8085
-      - "8085:80"
-    depends_on:
-      - db
     networks:
       - myappseb_network
 
