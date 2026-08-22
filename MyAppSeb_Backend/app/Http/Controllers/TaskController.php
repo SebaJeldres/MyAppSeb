@@ -79,10 +79,10 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Task $task)
+    public function show($id)
     {
-        Try {
-            $task = Task::find($task->id);
+        try {
+            $task = Task::find($id);
 
             if (!$task) {
                 return response()->json([
@@ -111,13 +111,12 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(Request $request, $id)
     {
         try {
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:100',
-                'status' => 'sometimes|boolean',
+                'status' => 'required|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -129,7 +128,7 @@ class TaskController extends Controller
                 ], 422);
             }
 
-            $task = Task::find($task->id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return response()->json([
@@ -139,12 +138,11 @@ class TaskController extends Controller
             }
 
             $task->update([
-                'name' => $request->name,
                 'status' => $request->status,
             ]);
 
             return response()->json([
-                'message' => 'Tarea actualizada con exito',
+                'message' => 'Estado actualizada con exito',
                 'task' => $task,
                 'status' => 200
             ], 200);
@@ -152,7 +150,7 @@ class TaskController extends Controller
 
         } catch (Throwable $e) {
             return response()->json([
-                'message' => 'Error al actualizar la tarea',
+                'message' => 'Error al actualizar el estado',
                 'error' => $e->getMessage(),
                 'status' => 500
             ], 500);
@@ -162,16 +160,16 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy($id)
     {
         try {
 
-            $task = Task::find($task->id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return response()->json([
                     'message' => 'Tarea no encontrada',
-                    '$status' => 404
+                    'status' => 404
                 ], 404);
             }
 
