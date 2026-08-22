@@ -113,7 +113,50 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:100',
+                'status' => 'sometimes|boolean',
+            ]);
+
+            if ($validator->fails()) {
+
+                return response()->json([
+                    'message' => 'Datos invalidos',
+                    'errors' => $validator->errors(),
+                    'status' => 422,
+                ], 422);
+            }
+
+            $task = Task::find($task->id);
+
+            if (!$task) {
+                return response()->json([
+                    'message' => 'Tarea no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            $task->update([
+                'name' => $request->name,
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'message' => 'Tarea actualizada con exito',
+                'task' => $task,
+                'status' => 200
+            ], 200);
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al actualizar la tarea',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 
     /**
