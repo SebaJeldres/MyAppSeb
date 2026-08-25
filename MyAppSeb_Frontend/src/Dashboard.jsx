@@ -1,4 +1,5 @@
 import React from 'react';
+import bgPersona from './assets/bg-persona.jpg';
 import { useNavigate } from 'react-router-dom';
 
 const cardsData = [
@@ -54,13 +55,13 @@ export default function Dashboard() {
     <div className="min-h-screen text-white relative overflow-hidden flex flex-col items-center justify-between p-6 select-none">
       
       {/* Fondo P5 */}
-      <div className="absolute inset-0 -z-10 bg-neutral-950">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <img 
-          src="/bg-persona.jpg" 
+          src={bgPersona} 
           alt="Background Persona 5" 
           className="w-full h-full object-cover object-center opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50" />
       </div>
 
       {/* Header */}

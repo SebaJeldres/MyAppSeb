@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTodos, createTodo, updateTodo, deleteTodo } from '../services/todoService';
+import bgPersona from '../assets/bg-persona.jpg';
 
 export default function TodoPage() {
   const navigate = useNavigate();
@@ -57,16 +58,16 @@ export default function TodoPage() {
   };
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden flex flex-col p-6 select-none bg-neutral-950">
+    <div className="min-h-screen text-white relative overflow-hidden flex flex-col p-6 select-none">
       
-      {/* Fondo P5 */}
-      <div className="absolute inset-0 -z-10 bg-neutral-950">
-        <img 
-          src="/bg-persona.jpg" 
-          alt="Background" 
-          className="w-full h-full object-cover object-center opacity-40 mix-blend-luminosity"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-black/80 to-black pointer-events-none" />
+      {/* Fondo Persona 5 Ciudad */}
+      <div 
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none"
+        style={{ 
+          backgroundImage: `url(${bgPersona})` 
+        }}
+      >
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* Header */}
@@ -96,7 +97,7 @@ export default function TodoPage() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="ESCRIBE UNA NUEVA TAREA..."
+              placeholder="ESCRIBE UNA NUEVA MISIÓN..."
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               className="w-full bg-black text-yellow-300 placeholder-neutral-500 font-bold italic tracking-wider px-5 py-3 border-3 border-neutral-700 focus:border-red-600 focus:outline-none shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] text-lg"
@@ -112,7 +113,7 @@ export default function TodoPage() {
 
         {/* Lista de Tareas */}
         {loading ? (
-          <div className="text-center font-black italic text-yellow-400 text-xl tracking-widest py-10">
+          <div className="text-center font-black italic text-yellow-400 text-xl tracking-widest py-10 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
             LOADING TARGETS...
           </div>
         ) : (
@@ -131,7 +132,7 @@ export default function TodoPage() {
 
                   <div 
                     className={`w-full border-2 border-neutral-800 p-4 flex items-center justify-between transition-colors ${
-                      isCompleted ? 'bg-neutral-900/90 text-neutral-500 line-through' : 'bg-red-600 text-white'
+                      isCompleted ? 'bg-neutral-900/95 text-neutral-500 line-through' : 'bg-red-600 text-white'
                     }`}
                     style={{ clipPath: 'polygon(0% 0%, 99% 1%, 98% 98%, 1% 96%)' }}
                   >
@@ -178,7 +179,7 @@ export default function TodoPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full text-center text-xs text-neutral-500 py-4 uppercase tracking-widest font-mono z-10">
+      <footer className="w-full text-center text-xs text-white font-bold py-4 uppercase tracking-widest font-mono z-10 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
         MISSION STATUS: {tasks.filter(t => !t.status).length} TARGETS REMAINING
       </footer>
 
