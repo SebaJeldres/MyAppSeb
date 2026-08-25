@@ -1,34 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Datos estáticos mock para la maqueta
-const initialTasks = [
-  { id: 1, text: 'Infiltrarse en el Palacio de Kamoshida', category: 'MISIÓN', completed: true },
-  { id: 2, text: 'Estudiar para los exámenes finales en la biblioteca', category: 'ESTUDIO', completed: false },
-  { id: 3, text: 'Trabajar en el turno de noche de la tienda de flores', category: 'TRABAJO', completed: false },
-  { id: 4, text: 'Comprar medicinas con Tae Takemi', category: 'COMPRAS', completed: false },
-];
+import { getTodos, createTodo, updateTodo, deleteTodo } from '../services/todoService';
 
 export default function TodoPage() {
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const toggleTask = (id) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const data = await getTodos();
+      setTasks(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error al obtener las tareas:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddTask = (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-    setTasks([...tasks, { id: Date.now(), text: newTask, category: 'QUEST', completed: false }]);
-    setNewTask('');
+
+    try {
+      const created = await createTodo(newTask);
+      setTasks([created, ...tasks]);
+      setNewTask('');
+    } catch (error) {
+      console.error('Error al crear la tarea:', error);
+    }
+  };
+
+  const toggleTask = async (task) => {
+    try {
+      const updated = await updateTodo(task.id, !task.status);
+      setTasks(tasks.map(t => t.id === task.id ? updated : t));
+    } catch (error) {
+      console.error('Error al actualizar la tarea:', error);
+    }
+  };
+
+  const handleDeleteTask = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await deleteTodo(id);
+      setTasks(tasks.filter(t => t.id !== id));
+    } catch (error) {
+      console.error('Error al eliminar la tarea:', error);
+    }
   };
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden flex flex-col p-6 select-none bg-neutral-950">
       
-      {/* Fondo P5 con gradiente dramático */}
+      {/* Fondo P5 */}
       <div className="absolute inset-0 -z-10 bg-neutral-950">
         <img 
           src="/bg-persona.jpg" 
@@ -38,10 +69,8 @@ export default function TodoPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-black/80 to-black pointer-events-none" />
       </div>
 
-      {/* Header con Botón de Regreso */}
+      {/* Header */}
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between pt-2 pb-6 z-10">
-        
-        {/* Título de la sección */}
         <div className="transform -rotate-2 bg-black border-4 border-white px-6 py-2 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] flex items-center gap-3">
           <span className="text-3xl font-black tracking-widest text-white italic bg-red-600 px-3 py-1 font-sans">
             TARGET
@@ -51,7 +80,6 @@ export default function TodoPage() {
           </span>
         </div>
 
-        {/* Botón Volver al Dashboard */}
         <button 
           onClick={() => navigate('/')}
           className="transform rotate-2 bg-red-600 hover:bg-red-500 text-white font-black italic border-2 border-white px-5 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-all tracking-wider uppercase font-sans"
@@ -60,15 +88,15 @@ export default function TodoPage() {
         </button>
       </header>
 
-      {/* Contenedor Principal */}
+      {/* Contenido Principal */}
       <main className="w-full max-w-4xl mx-auto flex flex-col gap-6 z-10 my-auto">
         
-        {/* Formulario de Input estilo P5 */}
+        {/* Formulario */}
         <form onSubmit={handleAddTask} className="flex gap-3 w-full transform -rotate-1">
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="ESCRIBE UNA NUEVA MISIÓN..."
+              placeholder="ESCRIBE UNA NUEVA TAREA..."
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               className="w-full bg-black text-yellow-300 placeholder-neutral-500 font-bold italic tracking-wider px-5 py-3 border-3 border-neutral-700 focus:border-red-600 focus:outline-none shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] text-lg"
@@ -82,67 +110,76 @@ export default function TodoPage() {
           </button>
         </form>
 
-        {/* Lista de Tareas / Misiones */}
-        <div className="flex flex-col gap-4 mt-4">
-          {tasks.map((task, index) => {
-            const rotationClass = index % 2 === 0 ? '-rotate-1' : 'rotate-1';
-            
-            return (
-              <div 
-                key={task.id}
-                onClick={() => toggleTask(task.id)}
-                className={`group relative cursor-pointer transform transition-all duration-200 ${rotationClass} hover:scale-[1.02] hover:z-20`}
-              >
-                {/* Sombra proyectada */}
-                <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 -z-10" />
-
-                {/* Tarjeta de la tarea */}
-                <div className={`w-full border-2 border-neutral-800 p-4 flex items-center justify-between transition-colors ${
-                  task.completed ? 'bg-neutral-900/90 text-neutral-500 line-through' : 'bg-red-600 text-white'
-                }`}
-                style={{ clipPath: 'polygon(0% 0%, 99% 1%, 98% 98%, 1% 96%)' }}
+        {/* Lista de Tareas */}
+        {loading ? (
+          <div className="text-center font-black italic text-yellow-400 text-xl tracking-widest py-10">
+            LOADING TARGETS...
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 mt-4">
+            {tasks.map((task, index) => {
+              const rotationClass = index % 2 === 0 ? '-rotate-1' : 'rotate-1';
+              const isCompleted = Boolean(task.status);
+              
+              return (
+                <div 
+                  key={task.id}
+                  onClick={() => toggleTask(task)}
+                  className={`group relative cursor-pointer transform transition-all duration-200 ${rotationClass} hover:scale-[1.02] hover:z-20`}
                 >
-                  
-                  {/* Contenido izquierdo */}
-                  <div className="flex items-center gap-4">
-                    
-                    {/* Checkbox personalizado estilo Phantom Thief */}
-                    <div className={`w-8 h-8 border-2 flex items-center justify-center font-black text-xl italic ${
-                      task.completed 
-                        ? 'bg-neutral-800 border-neutral-600 text-red-500' 
-                        : 'bg-black border-white text-yellow-400'
-                    }`}>
-                      {task.completed ? '✓' : ''}
+                  <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 -z-10" />
+
+                  <div 
+                    className={`w-full border-2 border-neutral-800 p-4 flex items-center justify-between transition-colors ${
+                      isCompleted ? 'bg-neutral-900/90 text-neutral-500 line-through' : 'bg-red-600 text-white'
+                    }`}
+                    style={{ clipPath: 'polygon(0% 0%, 99% 1%, 98% 98%, 1% 96%)' }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-8 h-8 border-2 flex items-center justify-center font-black text-xl italic ${
+                        isCompleted 
+                          ? 'bg-neutral-800 border-neutral-600 text-red-500' 
+                          : 'bg-black border-white text-yellow-400'
+                      }`}>
+                        {isCompleted ? '✓' : ''}
+                      </div>
+
+                      <span className={`text-lg font-black italic tracking-wide font-sans ${
+                        isCompleted ? 'text-neutral-500' : 'text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,0.8)]'
+                      }`}>
+                        {task.name}
+                      </span>
                     </div>
 
-                    {/* Texto de la tarea */}
-                    <span className={`text-lg font-black italic tracking-wide font-sans ${
-                      task.completed ? 'text-neutral-500' : 'text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,0.8)]'
-                    }`}>
-                      {task.text}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`px-3 py-1 font-mono text-xs font-bold tracking-widest italic uppercase transform -skew-x-12 ${
+                        isCompleted 
+                          ? 'bg-neutral-800 text-neutral-600 border border-neutral-700' 
+                          : 'bg-black text-yellow-300 border border-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                      }`}>
+                        {isCompleted ? 'CLEARED' : 'QUEST'}
+                      </div>
 
-                  {/* Badge de Categoría */}
-                  <div className={`px-3 py-1 font-mono text-xs font-bold tracking-widest italic uppercase transform -skew-x-12 ${
-                    task.completed 
-                      ? 'bg-neutral-800 text-neutral-600 border border-neutral-700' 
-                      : 'bg-black text-yellow-300 border border-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                  }`}>
-                    {task.completed ? 'CLEARED' : task.category}
-                  </div>
+                      <button
+                        onClick={(e) => handleDeleteTask(e, task.id)}
+                        className="bg-black text-red-500 hover:bg-red-700 hover:text-white border border-red-600 px-2 py-0.5 font-sans font-black text-xs uppercase italic transition-colors"
+                      >
+                        X
+                      </button>
+                    </div>
 
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
       </main>
 
-      {/* Footer Status */}
+      {/* Footer */}
       <footer className="w-full text-center text-xs text-neutral-500 py-4 uppercase tracking-widest font-mono z-10">
-        MISSION STATUS: {tasks.filter(t => !t.completed).length} TARGETS REMAINING
+        MISSION STATUS: {tasks.filter(t => !t.status).length} TARGETS REMAINING
       </footer>
 
     </div>
