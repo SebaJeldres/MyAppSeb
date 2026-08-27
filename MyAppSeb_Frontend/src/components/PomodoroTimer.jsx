@@ -7,10 +7,13 @@ export default function PomodoroTimer() {
   const navigate = useNavigate();
 
   // Estados del Reloj
-  const [timeLeft, setTimeLeft] = useState(1500); // 25 min en segs por defecto
+  const [timeLeft, setTimeLeft] = useState(1500); // 25 min por defecto
   const [isRunning, setIsRunning] = useState(false);
   const [inputMinutes, setInputMinutes] = useState(25);
   const [inputSeconds, setInputSeconds] = useState(0);
+
+  // Estado del Modal de Alerta
+  const [showModal, setShowModal] = useState(false);
 
   // Estados de Tareas e Interfaz
   const [pendingTasks, setPendingTasks] = useState([]);
@@ -18,7 +21,7 @@ export default function PomodoroTimer() {
   const [isTableOpen, setIsTableOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Cargar tareas mediante todoService al montar
+  // Cargar tareas al montar
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -36,7 +39,7 @@ export default function PomodoroTimer() {
     }
   };
 
-  // Temporizador en tiempo real con Alerta al llegar a 0
+  // Temporizador en tiempo real
   useEffect(() => {
     let timer = null;
     if (isRunning && timeLeft > 0) {
@@ -45,7 +48,7 @@ export default function PomodoroTimer() {
       }, 1000);
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
-      alert('¡TIME UP! La sesión de Pomodoro ha terminado.');
+      setShowModal(true); // Despliega el modal al terminar
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft]);
@@ -65,14 +68,14 @@ export default function PomodoroTimer() {
     setIsRunning(false);
   };
 
-  // Agregar desde la tabla colapsable a la lista de la sesión
+  // Agregar a la lista de la sesión
   const handleSelectTask = (task) => {
     if (!selectedTasks.some((t) => t.id === task.id)) {
       setSelectedTasks([...selectedTasks, task]);
     }
   };
 
-  // Completar tarea mediante updateTodo de todoService
+  // Completar tarea
   const handleCompleteTask = async (task) => {
     try {
       await updateTodo(task.id, true);
@@ -116,7 +119,7 @@ export default function PomodoroTimer() {
       {/* Contenido Principal */}
       <main className="w-full max-w-2xl mx-auto flex flex-col items-center gap-6 z-10 my-auto">
         
-        {/* Reloj Digital en Blanco */}
+        {/* Reloj Digital */}
         <div className="transform -rotate-1 bg-black border-4 border-white px-10 py-6 shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] text-center w-full">
           <h1 className="text-7xl sm:text-8xl font-black tracking-widest text-white italic font-mono drop-shadow-[4px_4px_0px_rgba(220,38,38,1)]">
             {formatTime(timeLeft)}
@@ -130,10 +133,10 @@ export default function PomodoroTimer() {
             isRunning ? 'bg-neutral-900 text-white hover:bg-black' : 'bg-red-600 text-white hover:bg-red-500'
           }`}
         >
-          {isRunning ? 'HOLD UP! (PAUSE)' : 'SHOWTIME! (START)'}
+          {isRunning ? 'PAUSA' : 'INICIO'}
         </button>
 
-        {/* Inputs de Tiempo en Blanco */}
+        {/* Inputs de Tiempo */}
         <form onSubmit={handleSetTime} className="flex gap-3 w-full justify-center transform -rotate-1">
           <div className="flex items-center gap-2 bg-black border-2 border-neutral-700 px-4 py-2 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]">
             <input
@@ -159,7 +162,7 @@ export default function PomodoroTimer() {
             type="submit"
             className="bg-black hover:bg-neutral-900 text-white border-2 border-white px-6 py-2 font-black italic tracking-widest uppercase shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] transition-all font-sans"
           >
-            SET TIME
+            AGREGAR TIEMPO
           </button>
         </form>
 
@@ -169,18 +172,18 @@ export default function PomodoroTimer() {
             onClick={() => setIsTableOpen(!isTableOpen)}
             className="bg-black hover:bg-neutral-900 text-white border border-neutral-700 px-4 py-2 font-black italic tracking-wider text-sm uppercase transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
           >
-            {isTableOpen ? '▲ CLOSE TARGET LIST' : '▼ SELECT TARGETS (TO-DO)'}
+            {isTableOpen ? '▲ CERRAR LISTA DE TAREAS' : '▼ SELECCIONAR TAREAS (TO-DO)'}
           </button>
 
           {isTableOpen && (
             <div className="w-full bg-black/90 border-2 border-red-600 p-4 max-h-48 overflow-y-auto shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2">
               <p className="text-xs font-black italic text-neutral-400 tracking-widest uppercase mb-1">
-                PENDING TARGETS:
+                TAREAS PENDIENTES:
               </p>
               {loading ? (
-                <p className="text-sm font-bold italic text-white">LOADING TARGETS...</p>
+                <p className="text-sm font-bold italic text-white">CARGANDO TAREAS...</p>
               ) : pendingTasks.length === 0 ? (
-                <p className="text-sm italic text-neutral-500">NO PENDING TARGETS FOUND.</p>
+                <p className="text-sm italic text-neutral-500">NO HAY TAREAS PENDIENTES</p>
               ) : (
                 pendingTasks.map((task) => (
                   <div key={task.id} className="flex justify-between items-center bg-neutral-900 border border-neutral-800 p-2 italic">
@@ -198,14 +201,14 @@ export default function PomodoroTimer() {
           )}
         </div>
 
-        {/* Lista de Tareas Asignadas al Pomodoro Activo */}
+        {/* Lista de Tareas Asignadas */}
         <div className="w-full bg-neutral-900/90 border-2 border-white p-5 transform rotate-1 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)]">
           <h3 className="font-black italic text-white text-lg uppercase tracking-wider mb-3 font-sans">
-            ACTIVE SESSION TARGETS:
+            TAREAS ACTIVAS:
           </h3>
           {selectedTasks.length === 0 ? (
             <p className="text-sm italic text-neutral-500 font-bold">
-              NO TARGETS ASSIGNED TO THIS SESSION.
+              NO HAY TAREAS ASIGNADAS.
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -221,7 +224,7 @@ export default function PomodoroTimer() {
                     <span className="font-black italic text-white tracking-wide">{task.name}</span>
                   </div>
                   <span className="bg-red-600 text-white text-[10px] font-black italic px-2 py-0.5 uppercase tracking-widest">
-                    ACTIVE
+                    ACTIVAR
                   </span>
                 </div>
               ))}
@@ -235,6 +238,33 @@ export default function PomodoroTimer() {
       <footer className="w-full text-center text-xs text-white font-bold py-4 uppercase tracking-widest font-mono z-10 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
         SESSION STATUS: {selectedTasks.length} TARGETS IN PROGRESS
       </footer>
+
+      {/* Modal Persona 5 cuando finaliza el tiempo */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-black border-4 border-white p-8 max-w-md w-full transform -rotate-2 shadow-[12px_12px_0px_0px_rgba(220,38,38,1)] text-center relative">
+            
+            <div className="inline-block bg-red-600 text-white px-4 py-1 font-black italic text-xl tracking-widest uppercase transform skew-x-12 mb-4 border-2 border-white">
+              TIME'S UP!
+            </div>
+            
+            <h2 className="text-2xl font-black italic text-white tracking-wide uppercase font-sans mb-2">
+              TAREA COMPLETADA! 
+            </h2>
+            
+            <p className="text-neutral-300 font-bold italic tracking-wide text-sm mb-6">
+              El tiempo asignado a esta sesión ha finalizado. Tómate un descanso o inicia una nueva sesión.
+            </p>
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-black italic text-lg py-3 uppercase tracking-widest border-2 border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform"
+            >
+              CERRAR
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
