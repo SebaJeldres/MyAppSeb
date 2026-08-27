@@ -1,37 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import { useNavigate } from 'react-router-dom';
+import { getTodos, updateTodo } from '../services/todoService';
+import bgPersona from '../assets/bg-persona.jpg';
 
-const PomodoroTimer = () => {
-  // 1. Estados del Reloj
-  const [timeLeft, setTimeLeft] = useState(0);
+export default function PomodoroTimer() {
+  const navigate = useNavigate();
+
+  // Estados del Reloj
+  const [timeLeft, setTimeLeft] = useState(1500); // 25 min en segs por defecto
   const [isRunning, setIsRunning] = useState(false);
   const [inputMinutes, setInputMinutes] = useState(25);
   const [inputSeconds, setInputSeconds] = useState(0);
 
-  // 2. Estados de Tareas e Interfaz
+  // Estados de Tareas e Interfaz
   const [pendingTasks, setPendingTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [isTableOpen, setIsTableOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Cargar tareas al montar el componente
+  // Cargar tareas mediante todoService al montar
   useEffect(() => {
     fetchTasks();
   }, []);
 
   const fetchTasks = async () => {
     try {
-      // Consume tu cliente api.js usando la VITE_API_BASE_URL
-      const response = await api.get('/tasks');
-      const tasks = response.data.tasks || [];
-      // Filtrar únicamente tareas pendientes (status: false / 0)
-      const pending = tasks.filter((task) => !task.status);
-      setPendingTasks(pending);
+      setLoading(true);
+      const data = await getTodos();
+      const tasksList = Array.isArray(data) ? data : [];
+      // Filtrar tareas no completadas (!status)
+      setPendingTasks(tasksList.filter((task) => !task.status));
     } catch (error) {
-      console.error("Error al obtener las tareas desde Laravel:", error);
+      console.error('Error al cargar misiones en Pomodoro:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 3. Temporizador en Tiempo Real
+  // Temporizador en tiempo real
   useEffect(() => {
     let timer = null;
     if (isRunning && timeLeft > 0) {
@@ -44,14 +50,14 @@ const PomodoroTimer = () => {
     return () => clearInterval(timer);
   }, [isRunning, timeLeft]);
 
-  // Formatear segundos a MM:SS
+  // Formato MM:SS
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Ajustar tiempo manual
+  // Ajuste manual de tiempo
   const handleSetTime = (e) => {
     e.preventDefault();
     const total = (parseInt(inputMinutes) || 0) * 60 + (parseInt(inputSeconds) || 0);
@@ -59,119 +65,179 @@ const PomodoroTimer = () => {
     setIsRunning(false);
   };
 
-  // Agregar tareas desde la tabla colapsable a la lista activa del Pomodoro
+  // Agregar desde la tabla colapsable a la lista de la sesión
   const handleSelectTask = (task) => {
     if (!selectedTasks.some((t) => t.id === task.id)) {
       setSelectedTasks([...selectedTasks, task]);
     }
   };
 
-  // Tachar tarea: Envía PUT /tasks/{id} con status = true
-  const handleCompleteTask = async (taskId) => {
+  // Completar tarea mediante updateTodo de todoService
+  const handleCompleteTask = async (task) => {
     try {
-      await api.put(`/tasks/${taskId}`, {
-        status: true,
-      });
+      await updateTodo(task.id, true); // Cambia status a true (1)
 
-      // Actualizar estado local removiendo la tarea completada
-      setSelectedTasks(selectedTasks.filter((t) => t.id !== taskId));
-      setPendingTasks(pendingTasks.filter((t) => t.id !== taskId));
+      // Remueve de las listas locales
+      setSelectedTasks(selectedTasks.filter((t) => t.id !== task.id));
+      setPendingTasks(pendingTasks.filter((t) => t.id !== task.id));
     } catch (error) {
-      console.error("Error al actualizar la tarea:", error);
+      console.error('Error al completar la misión:', error);
     }
   };
 
   return (
-    <div className="pomodoro-container p-6 max-w-md mx-auto text-center border rounded-lg shadow-md bg-white">
-      {/* Reloj Digital Central */}
-      <h1 className="text-6xl font-bold my-4 font-mono text-gray-800">
-        {formatTime(timeLeft)}
-      </h1>
-
-      {/* Control Iniciar / Pausar */}
-      <button 
-        onClick={() => setIsRunning(!isRunning)}
-        className={`px-6 py-2 rounded text-white font-bold mb-4 transition ${
-          isRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700'
-        }`}
+    <div className="min-h-screen text-white relative overflow-hidden flex flex-col p-6 select-none">
+      
+      {/* Fondo Persona 5 */}
+      <div 
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none"
+        style={{ backgroundImage: `url(${bgPersona})` }}
       >
-        {isRunning ? 'Pausar' : 'Iniciar'}
-      </button>
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
 
-      {/* Input para fijar Minutos y Segundos */}
-      <form onSubmit={handleSetTime} className="flex justify-center items-center gap-2 mb-6">
-        <input
-          type="number"
-          min="0"
-          value={inputMinutes}
-          onChange={(e) => setInputMinutes(e.target.value)}
-          className="border p-2 w-16 text-center rounded focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Min"
-        />
-        <span className="text-xl font-bold">:</span>
-        <input
-          type="number"
-          min="0"
-          max="59"
-          value={inputSeconds}
-          onChange={(e) => setInputSeconds(e.target.value)}
-          className="border p-2 w-16 text-center rounded focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Seg"
-        />
-        <button type="submit" className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">
-          Fijar
+      {/* Header estilo P5 */}
+      <header className="w-full max-w-5xl mx-auto flex items-center justify-between pt-2 pb-6 z-10">
+        <div className="transform -rotate-2 bg-black border-4 border-white px-6 py-2 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] flex items-center gap-3">
+          <span className="text-3xl font-black tracking-widest text-white italic bg-red-600 px-3 py-1 font-sans">
+            POMODORO
+          </span>
+          <span className="text-2xl font-extrabold tracking-wider text-white uppercase italic font-sans">
+            // TIMER
+          </span>
+        </div>
+
+        <button 
+          onClick={() => navigate('/')}
+          className="transform rotate-2 bg-red-600 hover:bg-red-500 text-white font-black italic border-2 border-white px-5 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-all tracking-wider uppercase font-sans"
+        >
+          &lt; BACK TO DASHBOARD
         </button>
-      </form>
+      </header>
 
-      {/* Botón y Tabla Colapsable de Tareas Pendientes */}
-      <button
-        onClick={() => setIsTableOpen(!isTableOpen)}
-        className="mb-4 text-sm font-medium text-blue-600 hover:underline block mx-auto"
-      >
-        {isTableOpen ? '▲ Ocultar tareas pendientes' : '▼ Ver tareas pendientes'}
-      </button>
+      {/* Contenido Principal */}
+      <main className="w-full max-w-2xl mx-auto flex flex-col items-center gap-6 z-10 my-auto">
+        
+        {/* Reloj Digital P5 */}
+        <div className="transform -rotate-1 bg-black border-4 border-white px-10 py-6 shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] text-center w-full">
+          <h1 className="text-7xl sm:text-8xl font-black tracking-widest text-yellow-300 italic font-mono drop-shadow-[4px_4px_0px_rgba(220,38,38,1)]">
+            {formatTime(timeLeft)}
+          </h1>
+        </div>
 
-      {isTableOpen && (
-        <div className="border rounded p-3 mb-6 bg-gray-50 max-h-40 overflow-y-auto text-left shadow-inner">
-          <p className="font-semibold text-xs mb-2 text-gray-500">Pendientes (status: false):</p>
-          {pendingTasks.length === 0 ? (
-            <p className="text-xs text-gray-400 italic">No hay tareas pendientes.</p>
-          ) : (
-            pendingTasks.map((task) => (
-              <div key={task.id} className="flex justify-between items-center py-1.5 border-b last:border-0">
-                <span className="text-sm font-medium text-gray-700">{task.name}</span>
-                <button
-                  onClick={() => handleSelectTask(task)}
-                  className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded"
-                >
-                  Agregar
-                </button>
-              </div>
-            ))
+        {/* Botón de Inicio / Pausa */}
+        <button
+          onClick={() => setIsRunning(!isRunning)}
+          className={`transform rotate-1 w-full py-4 border-3 border-white text-2xl font-black italic tracking-widest uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-all ${
+            isRunning ? 'bg-neutral-900 text-yellow-400 hover:bg-black' : 'bg-red-600 text-white hover:bg-red-500'
+          }`}
+        >
+          {isRunning ? 'HOLD UP! (PAUSE)' : 'SHOWTIME! (START)'}
+        </button>
+
+        {/* Inputs de Tiempo (Min : Seg) */}
+        <form onSubmit={handleSetTime} className="flex gap-3 w-full justify-center transform -rotate-1">
+          <div className="flex items-center gap-2 bg-black border-2 border-neutral-700 px-4 py-2 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]">
+            <input
+              type="number"
+              min="0"
+              value={inputMinutes}
+              onChange={(e) => setInputMinutes(e.target.value)}
+              className="bg-transparent w-16 text-center font-bold text-xl italic text-yellow-300 focus:outline-none"
+              placeholder="MIN"
+            />
+            <span className="text-xl font-black text-white italic">:</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              value={inputSeconds}
+              onChange={(e) => setInputSeconds(e.target.value)}
+              className="bg-transparent w-16 text-center font-bold text-xl italic text-yellow-300 focus:outline-none"
+              placeholder="SEC"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-black hover:bg-neutral-900 text-white border-2 border-white px-6 py-2 font-black italic tracking-widest uppercase shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] transition-all font-sans"
+          >
+            SET TIME
+          </button>
+        </form>
+
+        {/* Desplegable de Tabla de Pendientes */}
+        <div className="w-full flex flex-col items-center gap-3">
+          <button
+            onClick={() => setIsTableOpen(!isTableOpen)}
+            className="bg-black hover:bg-neutral-900 text-yellow-400 border border-neutral-700 px-4 py-2 font-black italic tracking-wider text-sm uppercase transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+          >
+            {isTableOpen ? '▲ CLOSE TARGET LIST' : '▼ SELECT TARGETS (TO-DO)'}
+          </button>
+
+          {isTableOpen && (
+            <div className="w-full bg-black/90 border-2 border-red-600 p-4 max-h-48 overflow-y-auto shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2">
+              <p className="text-xs font-black italic text-neutral-400 tracking-widest uppercase mb-1">
+                PENDING TARGETS:
+              </p>
+              {loading ? (
+                <p className="text-sm font-bold italic text-yellow-400">LOADING TARGETS...</p>
+              ) : pendingTasks.length === 0 ? (
+                <p className="text-sm italic text-neutral-500">NO PENDING TARGETS FOUND.</p>
+              ) : (
+                pendingTasks.map((task) => (
+                  <div key={task.id} className="flex justify-between items-center bg-neutral-900 border border-neutral-800 p-2 italic">
+                    <span className="font-black text-sm text-white">{task.name}</span>
+                    <button
+                      onClick={() => handleSelectTask(task)}
+                      className="bg-red-600 hover:bg-red-500 text-white font-black text-xs px-3 py-1 uppercase tracking-wider border border-white"
+                    >
+                      ADD
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
-      )}
 
-      {/* Lista de Tareas Seleccionadas para la Sesión Activa */}
-      <div className="selected-tasks text-left border-t pt-4">
-        <h3 className="font-bold text-gray-800 mb-2">Tareas de la Sesión:</h3>
-        {selectedTasks.length === 0 ? (
-          <p className="text-xs text-gray-400 italic">Sin tareas asignadas a este bloque.</p>
-        ) : (
-          selectedTasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-3 py-1">
-              <input
-                type="checkbox"
-                onChange={() => handleCompleteTask(task.id)}
-                className="w-4 h-4 text-red-600 rounded cursor-pointer"
-              />
-              <span className="text-sm text-gray-800 font-medium">{task.name}</span>
+        {/* Lista de Tareas Asignadas al Pomodoro Activo */}
+        <div className="w-full bg-neutral-900/90 border-2 border-white p-5 transform rotate-1 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)]">
+          <h3 className="font-black italic text-yellow-400 text-lg uppercase tracking-wider mb-3 font-sans">
+            ACTIVE SESSION TARGETS:
+          </h3>
+          {selectedTasks.length === 0 ? (
+            <p className="text-sm italic text-neutral-500 font-bold">
+              NO TARGETS ASSIGNED TO THIS SESSION.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {selectedTasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between bg-black p-3 border border-neutral-700">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleCompleteTask(task)}
+                      className="w-6 h-6 border-2 border-white bg-black hover:bg-red-600 text-yellow-300 font-black flex items-center justify-center text-xs transition-colors"
+                    >
+                      ✓
+                    </button>
+                    <span className="font-black italic text-white tracking-wide">{task.name}</span>
+                  </div>
+                  <span className="bg-red-600 text-white text-[10px] font-black italic px-2 py-0.5 uppercase tracking-widest">
+                    ACTIVE
+                  </span>
+                </div>
+              ))}
             </div>
-          ))
-        )}
-      </div>
+          )}
+        </div>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full text-center text-xs text-white font-bold py-4 uppercase tracking-widest font-mono z-10 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+        SESSION STATUS: {selectedTasks.length} TARGETS IN PROGRESS
+      </footer>
+
     </div>
   );
-};
-
-export default PomodoroTimer;
+}
