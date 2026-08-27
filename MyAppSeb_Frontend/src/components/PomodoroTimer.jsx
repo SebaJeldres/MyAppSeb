@@ -28,7 +28,6 @@ export default function PomodoroTimer() {
       setLoading(true);
       const data = await getTodos();
       const tasksList = Array.isArray(data) ? data : [];
-      // Filtrar tareas no completadas (!status)
       setPendingTasks(tasksList.filter((task) => !task.status));
     } catch (error) {
       console.error('Error al cargar misiones en Pomodoro:', error);
@@ -37,15 +36,16 @@ export default function PomodoroTimer() {
     }
   };
 
-  // Temporizador en tiempo real
+  // Temporizador en tiempo real con Alerta al llegar a 0
   useEffect(() => {
     let timer = null;
     if (isRunning && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
+      alert('¡TIME UP! La sesión de Pomodoro ha terminado.');
     }
     return () => clearInterval(timer);
   }, [isRunning, timeLeft]);
@@ -75,9 +75,7 @@ export default function PomodoroTimer() {
   // Completar tarea mediante updateTodo de todoService
   const handleCompleteTask = async (task) => {
     try {
-      await updateTodo(task.id, true); // Cambia status a true (1)
-
-      // Remueve de las listas locales
+      await updateTodo(task.id, true);
       setSelectedTasks(selectedTasks.filter((t) => t.id !== task.id));
       setPendingTasks(pendingTasks.filter((t) => t.id !== task.id));
     } catch (error) {
@@ -96,7 +94,7 @@ export default function PomodoroTimer() {
         <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* Header estilo P5 */}
+      {/* Header */}
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between pt-2 pb-6 z-10">
         <div className="transform -rotate-2 bg-black border-4 border-white px-6 py-2 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] flex items-center gap-3">
           <span className="text-3xl font-black tracking-widest text-white italic bg-red-600 px-3 py-1 font-sans">
@@ -118,9 +116,9 @@ export default function PomodoroTimer() {
       {/* Contenido Principal */}
       <main className="w-full max-w-2xl mx-auto flex flex-col items-center gap-6 z-10 my-auto">
         
-        {/* Reloj Digital P5 */}
+        {/* Reloj Digital en Blanco */}
         <div className="transform -rotate-1 bg-black border-4 border-white px-10 py-6 shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] text-center w-full">
-          <h1 className="text-7xl sm:text-8xl font-black tracking-widest text-yellow-300 italic font-mono drop-shadow-[4px_4px_0px_rgba(220,38,38,1)]">
+          <h1 className="text-7xl sm:text-8xl font-black tracking-widest text-white italic font-mono drop-shadow-[4px_4px_0px_rgba(220,38,38,1)]">
             {formatTime(timeLeft)}
           </h1>
         </div>
@@ -129,13 +127,13 @@ export default function PomodoroTimer() {
         <button
           onClick={() => setIsRunning(!isRunning)}
           className={`transform rotate-1 w-full py-4 border-3 border-white text-2xl font-black italic tracking-widest uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-all ${
-            isRunning ? 'bg-neutral-900 text-yellow-400 hover:bg-black' : 'bg-red-600 text-white hover:bg-red-500'
+            isRunning ? 'bg-neutral-900 text-white hover:bg-black' : 'bg-red-600 text-white hover:bg-red-500'
           }`}
         >
           {isRunning ? 'HOLD UP! (PAUSE)' : 'SHOWTIME! (START)'}
         </button>
 
-        {/* Inputs de Tiempo (Min : Seg) */}
+        {/* Inputs de Tiempo en Blanco */}
         <form onSubmit={handleSetTime} className="flex gap-3 w-full justify-center transform -rotate-1">
           <div className="flex items-center gap-2 bg-black border-2 border-neutral-700 px-4 py-2 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]">
             <input
@@ -143,7 +141,7 @@ export default function PomodoroTimer() {
               min="0"
               value={inputMinutes}
               onChange={(e) => setInputMinutes(e.target.value)}
-              className="bg-transparent w-16 text-center font-bold text-xl italic text-yellow-300 focus:outline-none"
+              className="bg-transparent w-16 text-center font-bold text-xl italic text-white focus:outline-none"
               placeholder="MIN"
             />
             <span className="text-xl font-black text-white italic">:</span>
@@ -153,7 +151,7 @@ export default function PomodoroTimer() {
               max="59"
               value={inputSeconds}
               onChange={(e) => setInputSeconds(e.target.value)}
-              className="bg-transparent w-16 text-center font-bold text-xl italic text-yellow-300 focus:outline-none"
+              className="bg-transparent w-16 text-center font-bold text-xl italic text-white focus:outline-none"
               placeholder="SEC"
             />
           </div>
@@ -169,7 +167,7 @@ export default function PomodoroTimer() {
         <div className="w-full flex flex-col items-center gap-3">
           <button
             onClick={() => setIsTableOpen(!isTableOpen)}
-            className="bg-black hover:bg-neutral-900 text-yellow-400 border border-neutral-700 px-4 py-2 font-black italic tracking-wider text-sm uppercase transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            className="bg-black hover:bg-neutral-900 text-white border border-neutral-700 px-4 py-2 font-black italic tracking-wider text-sm uppercase transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
           >
             {isTableOpen ? '▲ CLOSE TARGET LIST' : '▼ SELECT TARGETS (TO-DO)'}
           </button>
@@ -180,7 +178,7 @@ export default function PomodoroTimer() {
                 PENDING TARGETS:
               </p>
               {loading ? (
-                <p className="text-sm font-bold italic text-yellow-400">LOADING TARGETS...</p>
+                <p className="text-sm font-bold italic text-white">LOADING TARGETS...</p>
               ) : pendingTasks.length === 0 ? (
                 <p className="text-sm italic text-neutral-500">NO PENDING TARGETS FOUND.</p>
               ) : (
@@ -202,7 +200,7 @@ export default function PomodoroTimer() {
 
         {/* Lista de Tareas Asignadas al Pomodoro Activo */}
         <div className="w-full bg-neutral-900/90 border-2 border-white p-5 transform rotate-1 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)]">
-          <h3 className="font-black italic text-yellow-400 text-lg uppercase tracking-wider mb-3 font-sans">
+          <h3 className="font-black italic text-white text-lg uppercase tracking-wider mb-3 font-sans">
             ACTIVE SESSION TARGETS:
           </h3>
           {selectedTasks.length === 0 ? (
@@ -216,7 +214,7 @@ export default function PomodoroTimer() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => handleCompleteTask(task)}
-                      className="w-6 h-6 border-2 border-white bg-black hover:bg-red-600 text-yellow-300 font-black flex items-center justify-center text-xs transition-colors"
+                      className="w-6 h-6 border-2 border-white bg-black hover:bg-red-600 text-white font-black flex items-center justify-center text-xs transition-colors"
                     >
                       ✓
                     </button>
