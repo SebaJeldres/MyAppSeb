@@ -74,7 +74,7 @@ export default function TodoPage() {
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between pt-2 pb-6 z-10">
         <div className="transform -rotate-2 bg-black border-4 border-white px-6 py-2 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] flex items-center gap-3">
           <span className="text-3xl font-black tracking-widest text-white italic bg-red-600 px-3 py-1 font-sans">
-            TARGET
+            TAREA
           </span>
           <span className="text-2xl font-extrabold tracking-wider text-white uppercase italic font-sans">
             // TO-DO LIST
@@ -97,24 +97,24 @@ export default function TodoPage() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="ESCRIBE UNA NUEVA MISIÓN..."
+              placeholder="ESCRIBE UNA NUEVA TAREA..."
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
-              className="w-full bg-black text-yellow-300 placeholder-neutral-500 font-bold italic tracking-wider px-5 py-3 border-3 border-neutral-700 focus:border-red-600 focus:outline-none shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] text-lg"
+              className="w-full bg-black text-white placeholder-neutral-500 font-bold italic tracking-wider px-5 py-3 border-3 border-neutral-700 focus:border-red-600 focus:outline-none shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] text-lg"
             />
           </div>
           <button
             type="submit"
             className="bg-black hover:bg-neutral-900 text-white border-3 border-white px-8 py-3 font-black italic tracking-widest uppercase shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all text-lg font-sans"
           >
-            TAKE IT!
+            AÑADIR
           </button>
         </form>
 
         {/* Lista de Tareas */}
         {loading ? (
           <div className="text-center font-black italic text-yellow-400 text-xl tracking-widest py-10 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            LOADING TARGETS...
+            CARGANDO TAREAS...
           </div>
         ) : (
           <div className="flex flex-col gap-4 mt-4">
@@ -158,7 +158,7 @@ export default function TodoPage() {
                           ? 'bg-neutral-800 text-neutral-600 border border-neutral-700' 
                           : 'bg-black text-yellow-300 border border-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                       }`}>
-                        {isCompleted ? 'CLEARED' : 'QUEST'}
+                        {isCompleted ? 'LISTA' : 'PENDIENTE'}
                       </div>
 
                       <button
