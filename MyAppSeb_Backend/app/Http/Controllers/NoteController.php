@@ -84,9 +84,33 @@ class NoteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Note $note)
+    public function show($id)
     {
-        //
+        try {
+            $note = Note::find($id);
+
+            if (!$note) {
+                return response()->json([
+                    'message' => 'nota no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'nota extraida con exito',
+                'note' => $note,
+                'status' => 200
+            ], 200);
+        
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al traer la nota',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 
     /**
