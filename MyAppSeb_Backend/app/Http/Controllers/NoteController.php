@@ -20,7 +20,7 @@ class NoteController extends Controller
 
             return response()->json([
                 'message' => 'notas traidas con exito',
-                'tasks' => $notes,
+                'notes' => $notes,
                 'status' => 200
             ], 200);
 
@@ -38,7 +38,47 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:100',
+                'description' => 'nullable|string',
+                'date' => 'required|date',
+                'status' => 'sometimes|boolean',
+                'prioridad' => 'sometimes|in:baja,media,alta'
+            ]);
+
+            if ($validator->fails()) {
+
+                return response()->json([
+                    'message' => 'Datos invalidos',
+                    'errors' => $validator->errors(),
+                    'status' => 422,
+                ], 422);
+            }
+
+            $note = Note::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'date' => $request->date,
+                'status' => $request->status,
+                'prioridad' => $request->prioridad,
+            ]);
+
+            return response()->json([
+                'message' => 'nota creada con exito',
+                'notes' => $note,
+                'status' => 201
+            ], 201);
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al crear la nota',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+
+        }
     }
 
     /**
