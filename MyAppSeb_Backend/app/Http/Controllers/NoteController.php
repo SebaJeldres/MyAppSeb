@@ -173,8 +173,34 @@ class NoteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Note $note)
+    public function destroy($id)
     {
-        //
+        try {
+
+            $note = Note::find($id);
+
+            if (!$note) {
+                return response()->json([
+                    'message' => 'Nota no encontrada',
+                    'status' => 404
+                ], 404);
+            }
+
+            $note->delete();
+
+            return response()->json([
+                'message' => 'Nota eliminada con exito',
+                'status' => 200
+            ], 200);
+
+
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al eliminar la Nota',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 }
