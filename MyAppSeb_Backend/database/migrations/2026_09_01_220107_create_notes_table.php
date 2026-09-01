@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->text('description');
+            $table->date('date');
+            $table->boolean('status')->default(false);
+            $table->enum('prioridad', ['baja', 'media', 'alta'])->default('media');
             $table->timestamps();
         });
     }
