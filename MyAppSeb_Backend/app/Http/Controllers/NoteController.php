@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class NoteController extends Controller
 {
@@ -12,7 +14,23 @@ class NoteController extends Controller
      */
     public function index()
     {
-        //
+        try {
+
+            $notes = Note::all();
+
+            return response()->json([
+                'message' => 'notas traidas con exito',
+                'tasks' => $notes,
+                'status' => 200
+            ], 200);
+
+        } catch (Throwable $e) {
+            
+            return response()->json([
+                'message' => 'Error al traer las notas',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ], 500);  }
     }
 
     /**
