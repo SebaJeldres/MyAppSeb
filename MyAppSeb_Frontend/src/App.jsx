@@ -3,6 +3,7 @@ import Dashboard from './Dashboard';
 import TodoPage from './components/TodoPage';
 import PomodoroTimer from './components/PomodoroTimer';
 import AgendaPage from './components/AgendaPage';
+import CalendarPage from './components/CalendarPage';
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/todo" element={<TodoPage />} />
         <Route path="/pomodoro" element={<PomodoroTimer />} />
         <Route path="/agenda" element={<AgendaPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
       </Routes>
     </BrowserRouter>
   );
